@@ -92,9 +92,9 @@
         </tr>
     </table>
     <div>
-        <button id="next-week" class="btn btn-info" data-week="1">Start a New Season!</button>
+        <button id="btn-next-week" class="btn btn-info" data-week="1">Start the Season!</button>
     </div>
-</div>
+    <h3 id="winner" class="alert-success text-sm-center"></h3>
 </div>
 <script type="application/javascript">
     $.ajaxSetup({
@@ -102,50 +102,64 @@
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    $(document).ready(function () {
-        $("#next-week").on('click', function (event) {
-            let week = $(this).data('week');
-            $.ajax({
-                type: 'POST',
-                url: '/play-week',
-                data: {week: week},
-                success: function (result) {
-                    console.log(result);
-                    let tableMatches = $("#table-matches");
-                    tableMatches.empty();
-                    $.each(result.matches, function (index, match) {
-                        let row = '';
-                        row += '<tr>';
-                        row += '<td>' + match.home_team_title + '</td>';
-                        row += '<td>' + match.home_score + '</td>';
-                        row += '<td> - </td>';
-                        row += '<td>' + match.away_score + '</td>';
-                        row += '<td>' + match.away_team_title + '</td>';
-                        row += '</tr>';
-                        tableMatches.append(row);
-                    });
-                    let tableLeague = $("#table-league");
-                    tableLeague.empty();
-                    $.each(result.teams, function (index, team) {
-                        let row = '';
-                        row += '<tr>';
-                        row += '<td>' + team.title + '</td>';
-                        row += '<td>' + team.pts + '</td>';
-                        row += '<td>' + team.plays + '</td>';
-                        row += '<td>' + team.wins + '</td>';
-                        row += '<td>' + team.draws + '</td>';
-                        row += '<td>' + team.loses + '</td>';
-                        row += '<td>' + (team.goals_scored - team.goals_conceded) + '</td>';
-                        row += '</tr>';
-                        tableLeague.append(row);
-                    });
+    function playWeek(week) {
+        let btnNextWeek = $("#btn-next-week");
+        $.ajax({
+            type: 'POST',
+            url: '/play-week',
+            data: {week: week},
+            success: function (results) {
+                console.log(results);
 
-                    $("#next-week").data('week', (week + 1));
+                let tableMatches = $("#table-matches");
+                tableMatches.empty();
+                $.each(results.matches, function (index, match) {
+                    let row = '';
+                    row += '<tr>';
+                    row += '<td>' + match.home_team_title + '</td>';
+                    row += '<td>' + match.home_score + '</td>';
+                    row += '<td> - </td>';
+                    row += '<td>' + match.away_score + '</td>';
+                    row += '<td>' + match.away_team_title + '</td>';
+                    row += '</tr>';
+                    tableMatches.append(row);
+                });
 
+                let tableLeague = $("#table-league");
+                tableLeague.empty();
+                $.each(results.teams, function (index, team) {
+                    let row = '';
+                    row += '<tr>';
+                    row += '<td>' + team.title + '</td>';
+                    row += '<td>' + team.pts + '</td>';
+                    row += '<td>' + team.plays + '</td>';
+                    row += '<td>' + team.wins + '</td>';
+                    row += '<td>' + team.draws + '</td>';
+                    row += '<td>' + team.loses + '</td>';
+                    row += '<td>' + (team.goals_scored - team.goals_conceded) + '</td>';
+                    row += '</tr>';
+                    tableLeague.append(row);
+                });
 
-
+                if (results.winner) {
+                    $("#winner").append(results.winner + " won the league :)");
+                    btnNextWeek.data('week', 0);
+                    btnNextWeek.html('Next Season!');
+                } else {
+                    btnNextWeek.data('week', (week + 1));
+                    btnNextWeek.html('Next Week!');
                 }
-            });
+            }
+        });
+    }
+    $(document).ready(function () {
+        $("#btn-next-week").on('click', function (event) {
+            let week = $(this).data('week');
+            if (week) {
+                playWeek(week);
+            } else {
+                location.reload();
+            }
         });
     });
 </script>
