@@ -1,0 +1,4 @@
+Create database:
+ CREATE DATABASE premier_league_db
+         DEFAULT CHARACTER SET utf8
+         DEFAULT COLLATE utf8_general_ci;
