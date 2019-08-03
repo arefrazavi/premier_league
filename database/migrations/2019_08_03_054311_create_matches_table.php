@@ -17,8 +17,8 @@ class CreateMatchesTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('home_team_id');
             $table->unsignedInteger('away_team_id');
-            $table->integer('home_score');
-            $table->integer('away_score');
+            $table->integer('home_score')->nullable();
+            $table->integer('away_score')->nullable();
             $table->integer('week');
         });
 
