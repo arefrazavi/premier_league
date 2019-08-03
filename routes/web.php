@@ -16,3 +16,4 @@ Route::get('/', 'TeamController@viewList');
 
 // POST requests
 Route::post('/play-week', 'MatchController@playWeek');
+Route::post('/predict-champion', 'TeamController@predictChampion');

@@ -13,6 +13,10 @@ class MatchLib
     const MIN_SCORE = 0;
     const HOME_TEAM_STRENGTH = 1;
 
+    /**
+     * Generate Random matches for the whole season
+     * @return int
+     */
     static public function generateMatches() {
         DB::table('matches')->truncate();
 
@@ -37,6 +41,12 @@ class MatchLib
         return 1;
     }
 
+    /**
+     * Stimulate playing matches of a given week
+     * and return their random results
+     * @param $week
+     * @return mixed
+     */
     static public function playWeekMatches($week) {
         $possibleScores = [];
         $j = self::MAX_SCORE;

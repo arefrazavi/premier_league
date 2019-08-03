@@ -9,34 +9,80 @@ use Illuminate\Support\Facades\DB;
 
 class TeamLib
 {
-    const MAX_SCORE = 10;
-    const MIN_SCORE = 0;
-    const HOME_TEAM_STRENGTH = 1;
+    /**
+     * Calculate the probability of winning the title for each team
+     * based on their current points and scores using Poisson distribution
+     * @return array
+     */
+    static function predictChampProbs() {
+        ini_set('precision', 10);
 
-    static public function predictChampProbs(int $week) {
-        $winProbs = [];
         $teams = Team::all();
-        $totalPlays = 2 * (count($teams) - 1);
-        $avgHomeScored = DB::table('matches')->avg('home_score');
-        $avgAwayScored = DB::table('matches')->avg('away_score');
-
+        $leagueHomeScored = DB::table('matches')->avg('home_score');
+        $leagueAwayScored = DB::table('matches')->avg('away_score');
+        $goals = [];
+        $estimatePts = [];
         foreach ($teams as $team) {
-            $homeAttack = DB::table('matches')->where('home_team_id', $team->id)->avg('home_score') / $avgHomeScored;
-            $homeDefence = DB::table('matches')->where('home_team_id', $team->id)->avg('away_score') / $avgAwayScored;
-            $awayAttack = DB::table('matches')->where('away_team_id', $team->id)->avg('away_score') / $avgAwayScored;
-            $awayDefence = DB::table('matches')->where('away_team_id', $team->id)->avg('home_score') / $avgHomeScored;
-            $homeLambda = $homeAttack * $homeDefence * $avgHomeScored;
-            $awayLambda = $awayAttack * $awayDefence * $avgAwayScored;
+            $goals[$team->id]['homeScored'] = DB::table('matches')
+                ->where('home_team_id', $team->id)
+                ->avg('home_score') ;
+            $goals[$team->id]['homeConceded'] = DB::table('matches')
+                ->where('home_team_id', $team->id)
+                ->avg('away_score');
+            $goals[$team->id]['awayScored'] = DB::table('matches')
+                ->where('away_team_id', $team->id)
+                ->avg('away_score');
+            $goals[$team->id]['awayConceded'] = DB::table('matches')
+                ->where('away_team_id', $team->id)
+                ->avg('home_score');
+            $estimatePts[$team->id] = $team->pts;
+        }
 
-            $homeWeeksPlayed = DB::table('matches')->where('home_team_id', $team->id)->count();
-            $homeWeeksLeft =  ($totalPlays / 2) - $homeWeeksPlayed;
-            $awayWeeksLeft = $team->plays - $homeWeeksPlayed;
-            $homeProb = pow($homeLambda, $homeWeeksLeft) * pow(M_E, -$homeLambda)
-                / CalculationHelper::factorial($homeWeeksLeft);
-            $awayProb = pow($awayLambda, $awayWeeksLeft) * pow(M_E, -$awayLambda)
-                / CalculationHelper::factorial($awayWeeksLeft);
+        $leftMatches = Match::whereNull('home_score')->orderBy('week')->get();
+        foreach ($leftMatches as $match) {
+            $homeAttack =  $leagueHomeScored ? $goals[$match->home_team_id]['homeScored'] / $leagueHomeScored : 0;
+            $homeDefence = $leagueAwayScored ? $goals[$match->home_team_id]['homeConceded'] / $leagueAwayScored : 0;
+            $awayAttack = $leagueAwayScored ? $goals[$match->home_team_id]['awayScored'] / $leagueAwayScored : 0;
+            $awayDefence = $leagueHomeScored ? $goals[$match->home_team_id]['awayConceded'] / $leagueHomeScored : 0;
+            $lambdaH = $homeAttack * $awayDefence * $leagueHomeScored;
+            $lambdaA = $awayAttack * $homeDefence * $leagueAwayScored;
 
-            $winProbs[$team->title] = ($homeProb + $awayProb) / 2;
+            // Calculate the probabilities that home and away teams scores from 1 to 10
+            $probs = [];
+            $maxScore = MatchLib::MAX_SCORE;
+            for ($x = 0; $x <= $maxScore; $x++) {
+
+                // Poisson distribution for x occurrences of the event (goal),
+                // λ is the average rate and e is the Euler’s constant
+                $poisson = (pow($lambdaH, $x) * pow(M_E, -$lambdaH))
+                    / CalculationHelper::factorial($x);
+                $probs[$match->home_team_id][$x] = $poisson;
+
+                $poisson = (pow($lambdaA, $x) * pow(M_E, -$lambdaA))
+                    / CalculationHelper::factorial($x);
+                $probs[$match->away_team_id][$x] = $poisson;
+            }
+
+            $probHWin = 0;
+            $probAWin = 0;
+            for($i = 1; $i <= $maxScore; $i++) {
+                for($j = 0; $j < $i; $j++) {
+                    $probHWin += $probs[$match->home_team_id][$i] * $probs[$match->away_team_id][$j];
+                    $probAWin += $probs[$match->away_team_id][$i] * $probs[$match->home_team_id][$j];
+                }
+            }
+            $probDraw = 0;
+            for($i = 1; $i <= $maxScore; $i++) {
+                $probDraw += $probs[$match->home_team_id][$i] * $probs[$match->away_team_id][$i];
+            }
+            $estimatePts[$match->home_team_id] += $probHWin * 3 + $probDraw * 1;
+            $estimatePts[$match->away_team_id] += $probAWin * 3 + $probDraw * 1;
+        }
+
+        $maxPts = 2 * (count($teams) - 1) * 3;
+        $winProbs = [];
+        foreach ($estimatePts as $id => $estimatePt) {
+            $winProbs[$id] = round(($estimatePt / $maxPts) * 100, 2);
         }
 
         return $winProbs;

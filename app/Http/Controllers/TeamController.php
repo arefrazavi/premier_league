@@ -32,4 +32,14 @@ class TeamController extends Controller
         return view('team.list', compact('teams', 'matches'));
     }
 
+    /**
+     * Call a function to predict championship probability of each team
+     * @param Request $request
+     * @return array
+     */
+    public function predictChampion(Request $request) {
+        $week = $request->input('week');
+        return TeamLib::predictChampProbs($week);
+    }
+
 }
