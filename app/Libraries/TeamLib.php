@@ -42,5 +42,17 @@ class TeamLib
         return $winProbs;
     }
 
+    static function resetTeamsPoints() {
+        DB::table('teams')
+            ->update([
+                'pts' => 0,
+                'plays' => 0,
+                'wins' => 0,
+                'draws' => 0,
+                'loses' => 0,
+                'goals_scored' => 0,
+                'goals_conceded' => 0,
+        ]);
+    }
 
 }

@@ -53,7 +53,7 @@
                             <td>{{ $team->wins }}</td>
                             <td>{{ $team->draws }}</td>
                             <td>{{ $team->loses }}</td>
-                            <td>{{ $team->goals_scored - $team->goals_received }}</td>
+                            <td>{{ $team->goals_scored - $team->goals_conceded }}</td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -124,8 +124,26 @@
                         row += '</tr>';
                         tableMatches.append(row);
                     });
+                    let tableLeague = $("#table-league");
+                    tableLeague.empty();
+                    $.each(result.teams, function (index, team) {
+                        let row = '';
+                        row += '<tr>';
+                        row += '<td>' + team.title + '</td>';
+                        row += '<td>' + team.pts + '</td>';
+                        row += '<td>' + team.plays + '</td>';
+                        row += '<td>' + team.wins + '</td>';
+                        row += '<td>' + team.draws + '</td>';
+                        row += '<td>' + team.loses + '</td>';
+                        row += '<td>' + (team.goals_scored - team.goals_conceded) + '</td>';
+                        row += '</tr>';
+                        tableLeague.append(row);
+                    });
 
                     $("#next-week").data('week', (week + 1));
+
+
+
                 }
             });
         });

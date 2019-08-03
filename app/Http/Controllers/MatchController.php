@@ -12,7 +12,7 @@ class MatchController extends Controller
     public function playWeek(Request $request) {
         $week = $request->input('week');
         $weekMatches = MatchLib::playWeekMatches($week);
-        $teams = Team::all();
+        $teams = Team::orderByDesc('pts')->get();
         return response()->json([
             'matches' => $weekMatches,
             'teams' => $teams

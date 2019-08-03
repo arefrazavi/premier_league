@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Libraries\TeamLib;
 use App\Models\Match;
 use App\Models\Team;
 use App\Libraries\MatchLib;
@@ -11,10 +12,11 @@ use Illuminate\Support\Facades\DB;
 class TeamController extends Controller
 {
 
-    public function viewList(int $week = 0)
+    public function viewList()
     {
-        // Start new season by resetting matches
+        // Start new season by resetting matches and teams points
         MatchLib::generateMatches();
+        TeamLib::resetTeamsPoints();
 
         $teams = [];
         $matches = Match::where('week', 1)->get();
@@ -27,7 +29,7 @@ class TeamController extends Controller
             $match->away_team_title = $awayTeam->title;
         }
         unset($match);
-        return view('team.list', compact('teams', 'matches', 'week'));
+        return view('team.list', compact('teams', 'matches'));
     }
 
 }
