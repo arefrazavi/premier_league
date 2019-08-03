@@ -125,7 +125,7 @@
                         tableMatches.append(row);
                     });
 
-                    $(this).data("week", week + 1);
+                    $("#next-week").data('week', (week + 1));
                 }
             });
         });
