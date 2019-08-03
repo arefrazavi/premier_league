@@ -79,7 +79,7 @@ class TeamLib
             $estimatePts[$match->away_team_id] += $probAWin * 3 + $probDraw * 1;
         }
 
-        $maxPts = 2 * (count($teams) - 1) * 3;
+        $maxPts = array_sum($estimatePts);
         $winProbs = [];
         foreach ($estimatePts as $id => $estimatePt) {
             $winProbs[$id] = round(($estimatePt / $maxPts) * 100, 2);

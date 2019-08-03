@@ -1,0 +1,8 @@
+.table caption {
+    caption-side: top;
+}
+#winner {
+    font-weight: bolder;
+    color: #008000;
+    margin: 1em 0;
+}

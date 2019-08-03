@@ -7,7 +7,6 @@ use App\Models\Match;
 use App\Models\Team;
 use App\Libraries\MatchLib;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class TeamController extends Controller
 {

@@ -5,35 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Premier League</title>
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
+
     <!-- Styles -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ URL::asset('css/custom.css') }}">
 
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
-          integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-
+    <!-- Javascript -->
     <script
         src="https://code.jquery.com/jquery-3.4.1.min.js"
         integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-        crossorigin="anonymous"></script>
-
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
-            integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
-            crossorigin="anonymous"></script>
-    <style>
-    </style>
+        crossorigin="anonymous">
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script type="application/javascript" src="{{ URL::asset('js/team/list.js') }}"></script>
 </head>
 <body>
 <div class="container-fluid">
     <h1 class="text-center">Welcome to Premier League Stimulation!</h1>
     <div class="row">
-        <div class="col-md-8">
-            <table class="table">
+        <div class="col-md-8 col-sm-12">
+            <table class="table table-bordered">
                 <tr>
                     <td>
-                        <table class="table table-striped table-bordered">
+                        <table class="table table-striped">
                             <caption>League Table</caption>
                             <thead class="thead-dark">
                             <tr>
@@ -62,7 +57,7 @@
                         </table>
                     </td>
                     <td>
-                        <table class="table table-striped table-bordered">
+                        <table class="table table-striped">
                             <caption>
                                 Match Results
                             </caption>
@@ -94,10 +89,10 @@
                 </tr>
             </table>
             <div>
-                <button id="btn-next-week" class="btn btn-info" data-week="1">Start the Season!</button>
+                <button id="btn-next-week" class="btn btn-success" data-week="1">Start the Season!</button>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 col-sm-12">
             <table class="table table-bordered">
                 <caption>Predictions of Championships</caption>
                 <tbody id="table-predictions">
@@ -111,91 +106,11 @@
             </table>
         </div>
     </div>
-    <h3 id="winner" class="alert-success text-sm-center"></h3>
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 id="winner" class="text-center"></h3>
+        </div>
+    </div>
 </div>
-<script type="application/javascript">
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
-    function playWeek(week) {
-        let btnNextWeek = $("#btn-next-week");
-        $.ajax({
-            type: 'POST',
-            url: '/play-week',
-            data: {week: week},
-            success: function (results) {
-                let tableMatches = $("#table-matches");
-                tableMatches.empty();
-                $.each(results.matches, function (index, match) {
-                    let row = '';
-                    row += '<tr>';
-                    row += '<td>' + match.home_team_title + '</td>';
-                    row += '<td>' + match.home_score + '</td>';
-                    row += '<td> - </td>';
-                    row += '<td>' + match.away_score + '</td>';
-                    row += '<td>' + match.away_team_title + '</td>';
-                    row += '</tr>';
-                    tableMatches.append(row);
-                });
-
-                let tableLeague = $("#table-league");
-                tableLeague.empty();
-                $.each(results.teams, function (index, team) {
-                    let row = '';
-                    row += '<tr>';
-                    row += '<td>' + team.title + '</td>';
-                    row += '<td>' + team.pts + '</td>';
-                    row += '<td>' + team.plays + '</td>';
-                    row += '<td>' + team.wins + '</td>';
-                    row += '<td>' + team.draws + '</td>';
-                    row += '<td>' + team.loses + '</td>';
-                    row += '<td>' + (team.goals_scored - team.goals_conceded) + '</td>';
-                    row += '</tr>';
-                    tableLeague.append(row);
-                });
-
-                if (results.winner) {
-                    $("#winner").append(results.winner + " won the league :)");
-                    btnNextWeek.data('week', 0);
-                    btnNextWeek.html('Next Season!');
-                } else {
-                    btnNextWeek.data('week', (week + 1));
-                    btnNextWeek.html('Next Week!');
-                }
-            }
-        });
-    }
-
-    function predictChampion() {
-        $.ajax({
-            type: 'POST',
-            url: '/predict-champion',
-            success: function (result) {
-                let tablePredictions =("#table-predictions");
-                console.log(result);
-                $.each(result, function (id, prob) {
-                    $("#pre-row-" + id).find(".prediction").html("%" + prob);
-                });
-            }
-        });
-    }
-
-    $(document).ready(function () {
-        $("#btn-next-week").on('click', function () {
-            let week = $(this).data('week');
-            if (week) {
-                playWeek(week);
-                if(week === 4) {
-                    predictChampion(week);
-                }
-            } else {
-                location.reload();
-            }
-        });
-    });
-</script>
 </body>
 </html>
