@@ -31,7 +31,6 @@ class MatchLib
                 $match->week = $w;
                 unset($week_team_ids[$match->away_team_id]);
                 $match->save();
-                echo "id: " . $match->id . "<br>";
             }
         }
 
@@ -46,10 +45,9 @@ class MatchLib
         }
 
         $weekMatches = Match::where('week', $week)->get();
-        foreach ($weekMatches as $match) {
+        foreach ($weekMatches as &$match) {
             $firstScore = CalculationHelper::getWeightedRandVal($possibleScores);
             $secondScore = CalculationHelper::getWeightedRandVal($possibleScores);
-            echo "<br>" .$firstScore . " ? " . $secondScore . "<br>";
             $homeTeam = Team::find($match->home_team_id);
             $awayTeam = Team::find($match->away_team_id);
             $possibleWinners = [
@@ -90,7 +88,12 @@ class MatchLib
 
             $homeTeam->save();
             $awayTeam->save();
+            $match->home_team_title = $homeTeam->title;
+            $match->away_team_title = $awayTeam->title;
         }
+        unset($match);
+
+        return $weekMatches;
     }
 
 }

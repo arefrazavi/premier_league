@@ -11,7 +11,8 @@
 |
 */
 
+// GET requests
 Route::get('/', 'TeamController@viewList');
 
-
-Route::get('/start-season', 'TeamController@startSeason');
+// POST requests
+Route::post('/play-week', 'MatchController@playWeek');

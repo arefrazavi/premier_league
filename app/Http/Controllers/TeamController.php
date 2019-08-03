@@ -13,15 +13,21 @@ class TeamController extends Controller
 
     public function viewList(int $week = 0)
     {
-        $teams = Team::all();
-        return view('team.list', compact('teams'));
-    }
-
-    public function startSeason() {
+        // Start new season by resetting matches
         MatchLib::generateMatches();
-        MatchLib::playWeekMatches(1);
-        //$this->viewList(1);
-    }
 
+        $teams = [];
+        $matches = Match::where('week', 1)->get();
+        foreach ($matches as &$match) {
+            $homeTeam = Team::find($match->home_team_id);
+            $teams[] = $homeTeam;
+            $match->home_team_title = $homeTeam->title;
+            $awayTeam = Team::find($match->away_team_id);
+            $teams[] = $awayTeam;
+            $match->away_team_title = $awayTeam->title;
+        }
+        unset($match);
+        return view('team.list', compact('teams', 'matches', 'week'));
+    }
 
 }
