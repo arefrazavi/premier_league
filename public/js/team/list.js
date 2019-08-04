@@ -4,59 +4,67 @@ $.ajaxSetup({
     }
 });
 
-function playWeek(week) {
+function updateMatchesTable(matches) {
+    let tableMatches = $("#table-matches");
+    tableMatches.empty();
+    $.each(matches, function (index, match) {
+        let row = "";
+        row += "<tr>";
+        row += "<td>" + match.home_team_title + "</td>";
+        row += "<td>" + match.home_score + "</td>";
+        row += "<td>-</td>";
+        row += "<td>" + match.away_score + "</td>";
+        row += "<td>" + match.away_team_title + "</td>";
+        row += "</tr>";
+        tableMatches.append(row);
+    });
+}
+
+function updateLeagueTable(teams) {
+    let tableLeague = $("#table-league");
+    tableLeague.empty();
+    $.each(teams, function (index, team) {
+        let row = '';
+        row += '<tr>';
+        row += '<td>' + team.title + '</td>';
+        row += '<td>' + team.pts + '</td>';
+        row += '<td>' + team.plays + '</td>';
+        row += '<td>' + team.wins + '</td>';
+        row += '<td>' + team.draws + '</td>';
+        row += '<td>' + team.loses + '</td>';
+        row += '<td>' + (team.goals_scored - team.goals_conceded) + '</td>';
+        row += '</tr>';
+        tableLeague.append(row);
+    });
+}
+function handleEndOfSeason(winner) {
+    let winnerElement = $("#winner");
+    winnerElement.append(winner + " won the PL cup :)");
+    winnerElement.animate({
+        fontSize: "2em",
+        specialEasing: {
+            width: "linear",
+            height: "easeOutBounce"
+        },
+        duration: 5000
+    });
     let btnNextWeek = $("#btn-next-week");
+    btnNextWeek.data('week', 0);
+    btnNextWeek.addClass('btn-danger');
+    btnNextWeek.html('Next Season!');
+}
+function playWeek(week) {
     $.ajax({
         type: 'POST',
         url: '/play-week',
         data: {week: week},
         success: function (results) {
-            let tableMatches = $("#table-matches");
-            tableMatches.empty();
-            $.each(results.matches, function (index, match) {
-                let row = "";
-                row += "<tr>";
-                row += "<td>" + match.home_team_title + "</td>";
-                row += "<td>" + match.home_score + "</td>";
-                row += "<td>-</td>";
-                row += "<td>" + match.away_score + "</td>";
-                row += "<td>" + match.away_team_title + "</td>";
-                row += "</tr>";
-                tableMatches.append(row);
-            });
-
-            let tableLeague = $("#table-league");
-            tableLeague.empty();
-            $.each(results.teams, function (index, team) {
-                let row = '';
-                row += '<tr>';
-                row += '<td>' + team.title + '</td>';
-                row += '<td>' + team.pts + '</td>';
-                row += '<td>' + team.plays + '</td>';
-                row += '<td>' + team.wins + '</td>';
-                row += '<td>' + team.draws + '</td>';
-                row += '<td>' + team.loses + '</td>';
-                row += '<td>' + (team.goals_scored - team.goals_conceded) + '</td>';
-                row += '</tr>';
-                tableLeague.append(row);
-            });
-
+            updateMatchesTable(results.matches);
+            updateLeagueTable(results.teams);
             if (results.winner) {
-                let winnerElement = $("#winner");
-                winnerElement.append(results.winner + " won the league :)");
-                winnerElement.addClass('glory');
-                winnerElement.animate({
-                    fontSize: "2em",
-                    specialEasing: {
-                        width: "linear",
-                        height: "easeOutBounce"
-                    },
-                    duration: 5000
-                });
-                btnNextWeek.data('week', 0);
-                btnNextWeek.addClass('btn-danger');
-                btnNextWeek.html('Next Season!');
+                handleEndOfSeason(results.winner);
             } else {
+                let btnNextWeek = $("#btn-next-week");
                 btnNextWeek.data('week', (week + 1));
                 btnNextWeek.addClass('btn-primary');
                 btnNextWeek.html('Next Week!');
@@ -65,6 +73,18 @@ function playWeek(week) {
     });
 }
 
+function playAllWeeks(week) {
+    $.ajax({
+        type: 'POST',
+        url: '/play-all',
+        data: {week: week},
+        success: function (results) {
+            updateMatchesTable(results.matches);
+            updateLeagueTable(results.teams);
+            handleEndOfSeason(results.winner);
+        }
+    });
+}
 function predictChampion() {
     $.ajax({
         type: 'POST',
@@ -87,6 +107,16 @@ $(document).ready(function () {
             if(week === 4) {
                 predictChampion(week);
             }
+        } else {
+            location.reload();
+        }
+    });
+
+    $("#btn-play-all").on('click', function () {
+        let week = $("#btn-next-week").data('week');
+        if (week) {
+            playAllWeeks(week);
+            predictChampion(week);
         } else {
             location.reload();
         }
