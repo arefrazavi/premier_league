@@ -61,7 +61,7 @@
                             <td>
                                 <table class="table table-striped">
                                     <caption>
-                                        Match Results
+                                        Match Results - Week <span class="week">1</span>
                                     </caption>
                                     <tbody id="table-matches">
                                     @foreach($matches as $match)
@@ -100,14 +100,14 @@
                 </div>
                 <div class="col-sm-6">
                     <div>
-                        <button id="btn-next-week" class="btn btn-success" data-week="1">Start the Season!</button>
+                        <button id="btn-next-week" class="btn btn-primary" data-week="1">Start the Season!</button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4 col-sm-12">
             <table class="table table-bordered">
-                <caption>Predictions of Championships</caption>
+                <caption> Predictions of Championships - Week <span class="week">1</span></caption>
                 <tbody id="table-predictions">
                     @foreach($teams as $team)
                         <tr id="pre-row-{{ $team->id }}">

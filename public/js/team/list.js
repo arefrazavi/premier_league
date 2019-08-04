@@ -4,7 +4,7 @@ $.ajaxSetup({
     }
 });
 
-function updateMatchesTable(matches) {
+function updateMatchesTable(matches, week) {
     let tableMatches = $("#table-matches");
     tableMatches.empty();
     $.each(matches, function (index, match) {
@@ -18,6 +18,7 @@ function updateMatchesTable(matches) {
         row += "</tr>";
         tableMatches.append(row);
     });
+    $(".week").html(week);
 }
 
 function updateLeagueTable(teams) {
@@ -59,14 +60,13 @@ function playWeek(week) {
         url: '/play-week',
         data: {week: week},
         success: function (results) {
-            updateMatchesTable(results.matches);
+            updateMatchesTable(results.matches, week);
             updateLeagueTable(results.teams);
             if (results.winner) {
                 handleEndOfSeason(results.winner);
             } else {
                 let btnNextWeek = $("#btn-next-week");
                 btnNextWeek.data('week', (week + 1));
-                btnNextWeek.addClass('btn-primary');
                 btnNextWeek.html('Next Week!');
             }
         }
@@ -79,7 +79,8 @@ function playAllWeeks(week) {
         url: '/play-all',
         data: {week: week},
         success: function (results) {
-            updateMatchesTable(results.matches);
+            let maxWeek = 2 * (Object.keys(results.teams).length - 1);
+            updateMatchesTable(results.matches, maxWeek);
             updateLeagueTable(results.teams);
             handleEndOfSeason(results.winner);
         }
